@@ -9,7 +9,10 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "sass": "^1.94.1",
+=======
+>>>>>>> 1ba217201561bf90d9c631fc669a5412bea4ffc1
     "sass-embedded": "^1.90.0",
     "typescript": "~5.8.3",
     "vite": "^7.1.0"
