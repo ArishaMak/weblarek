@@ -1,6 +1,8 @@
 import "./scss/styles.scss";
 
 import { API_URL } from "./utils/constants"; 
+// Импортируем моковые данные apiProducts из data.ts
+import { apiProducts } from "./utils/data";
 
 // Импорт 4 ключевых классов, требуемых для работы с данными
 import { WebLarekApi } from "./components/WebLarekApi"; 
@@ -12,13 +14,13 @@ import { BuyerModel } from "./components/models/BuyerModel";
 // Типы данных
 import type { IProduct } from "./types/index";
 
-const testProductsData = {
+/*const testProductsData = {
     items: [
         { id: '1', title: 'Кнопка "Купить"', description: '...', image: '...', category: 'кнопка', price: 100 },
         { id: '2', title: 'Стек JavaScript', description: '...', image: '...', category: 'хард-скил', price: 500 },
         { id: '3', title: 'Нет цены', description: 'Товар без цены', image: '/3.jpg', category: 'другое', price: null }, 
     ] as IProduct[],
-};
+};*/
 
 
 // 1. Инициализация классов
@@ -33,7 +35,7 @@ const buyer = new BuyerModel();
 // 2. Тестирование моделей данных
 
 console.log('--- Шаг 3: Тестирование Моделей Данных ---');
-const testItems: IProduct[] = testProductsData.items; 
+const testItems: IProduct[] = apiProducts.items;  
 
 // ProductsModel
 products.setItems(testItems); // setItems
@@ -63,6 +65,12 @@ buyer.setEmail('test@example.com');
 buyer.setPhone('88005553535');
 console.log('BuyerModel: Ошибки валидации (ожидается пусто): ', buyer.validateAddressPayment()); // Валидация
 buyer.reset(); // Очистка
+console.log('BuyerModel: Данные покупателя после reset():', { 
+    payment: buyer.getPayment(), 
+    address: buyer.getAddress(), 
+    email: buyer.getEmail(), 
+    phone: buyer.getPhone() 
+});
 
 
 // 3. Подключение работы с сервером (Требование Шага 4)
