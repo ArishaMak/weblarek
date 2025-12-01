@@ -3,7 +3,6 @@
  */
 export abstract class Component<T> {
     protected constructor(protected readonly container: HTMLElement) {
-        // Учитывайте что код в конструкторе исполняется ДО всех объявлений в дочернем классе
     }
 
     // Инструментарий для работы с DOM в дочерних компонентах
@@ -21,6 +20,11 @@ export abstract class Component<T> {
     // Вернуть корневой DOM-элемент
     render(data?: Partial<T>): HTMLElement {
         Object.assign(this as object, data ?? {});
+        return this.container;
+    }
+
+    // Фикс TS2445: Public getter для доступа к container извне (e.g., в main.ts gallery.element.innerHTML = ...)
+    get element(): HTMLElement {
         return this.container;
     }
 }
