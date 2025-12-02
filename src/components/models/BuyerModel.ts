@@ -1,6 +1,8 @@
 // src/components/models/BuyerModel.ts
 
 import type { IBuyer, TPayment } from "../../types";
+import type { IEvents } from "../base/Events";
+import { EVENTS } from "../base/eventNames"; 
 
 type AddressPaymentErrors = { payment?: string; address?: string };
 type EmailPhoneErrors = { email?: string; phone?: string };
@@ -10,28 +12,53 @@ export class BuyerModel {
     private address: string = '';
     private email: string = '';
     private phone: string = '';
+    private events: IEvents;
 
-    constructor() {}
+    constructor(events: IEvents) {
+        this.events = events;
+    }
 
-    // \Сеттеры
+    // Сеттеры
     public setPayment(payment: TPayment) {
         this.payment = payment;
+        this.events.emit(EVENTS.BUYER_CHANGE);
     }
 
     public setAddress(address: string) {
         this.address = address.trim();
+        this.events.emit(EVENTS.BUYER_CHANGE);
     }
 
     public setEmail(email: string) {
         this.email = email.trim();
+        this.events.emit(EVENTS.BUYER_CHANGE);
     }
 
     public setPhone(phone: string) {
         this.phone = phone.trim();
+        this.events.emit(EVENTS.BUYER_CHANGE);
+    }
+    
+    // Вспомогательный метод для обновления любого поля
+    public setField(field: keyof Omit<IBuyer, 'total' | 'items'>, value: string | TPayment) {
+        switch (field) {
+            case 'payment':
+                this.setPayment(value as TPayment);
+                break;
+            case 'address':
+                this.setAddress(value as string);
+                break;
+            case 'email':
+                this.setEmail(value as string);
+                break;
+            case 'phone':
+                this.setPhone(value as string);
+                break;
+        }
     }
 
     /**
-     * Возвращает все данные покупателя одним объектом типа IBuyer
+     * Возвращает все данные покупателя
      */
     public getData(): IBuyer {
         return {
@@ -39,7 +66,7 @@ export class BuyerModel {
             address: this.address,
             email: this.email,
             phone: this.phone,
-        };
+        } as IBuyer; 
     }
 
     public getPayment(): TPayment | null {
@@ -58,15 +85,14 @@ export class BuyerModel {
         return this.phone;
     }
 
-    // ========== Очистка формы ==========
     public reset() {
         this.payment = null;
         this.address = '';
         this.email = '';
         this.phone = '';
+        this.events.emit(EVENTS.BUYER_CHANGE);
     }
 
-    // ========== Валидация ==========
     public validateAddressPayment(): AddressPaymentErrors {
         const errors: AddressPaymentErrors = {};
 

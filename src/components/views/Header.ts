@@ -1,6 +1,7 @@
 import { Component } from "../base/Component";
 import type { IEvents } from "../base/Events";
 import { ensureElement } from "../../utils/utils";
+
 const EVENTS = {
   BASKET_OPEN: "basket:open" as const,
 };
@@ -29,11 +30,8 @@ export class Header extends Component<IHeader> {
   }
 
   set counter(value: number) {
+    // Логика проверки и установки значения счетчика остается в сеттере
     const safeValue = isNaN(value) || value < 0 ? 0 : value;
     this.counterElement.textContent = String(safeValue);
-  }
-
-  updateCartCount(count: number): void {
-    this.counter = count;
-  }
+ }
 }

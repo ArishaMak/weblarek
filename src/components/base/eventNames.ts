@@ -1,19 +1,28 @@
-export const EVENTS = {
-  CATALOG_CHANGED: "catalog:changed",
-  CART_CHANGED: "cart:changed",
-  SELECT_CHANGED: "change:selectedId", // Согласованно с main.ts
-  BUYER_CHANGED: "buyer:change",
+// src/components/base/eventNames.ts
 
-  CARD_SELECT: "card:select",
-  CARD_BUY: "card:buy",
-  CARD_REMOVE: "card:remove",
-  BASKET_OPEN: "basket:open",
-  BASKET_CHECKOUT: "basket:checkout",
-  ORDER_ADDRESS_PAYMENT_NEXT: "order:address:payment:next",
-  ORDER_EMAIL_PHONE_PAY: "order:email:phone:pay",
-  FORM_CHANGE: "form:change",
-  MODAL_OPENED: "modal:open",
-  MODAL_CLOSED: "modal:close",
+export const EVENTS = {
+    
+    // События Моделей (Model -> Presenter)
+    PRODUCTS_CHANGE_ITEMS: "products:change:items", 
+    PRODUCTS_CHANGE_SELECTED_ID: "products:change:selectedId", 
+    
+    CART_CHANGE: "cart:change",
+    BUYER_CHANGE: "buyer:change",
+
+    // События UI (View -> Presenter)
+    CARD_SELECT: "card:select",
+    CARD_BUY: "card:buy",
+    CARD_REMOVE: "card:remove",
+    BASKET_OPEN: "basket:open",
+    
+    // События форм заказа
+    ORDER_ADDRESS_PAYMENT: "order:address:payment", 
+    ORDER_INPUT_CHANGE: "order:input:change", 
+    ORDER_ADDRESS_PAYMENT_NEXT: "order:address:payment:next",
+    ORDER_EMAIL_PHONE_PAY: "order:email:phone:pay",
+    
+    MODAL_OPENED: "modal:open",
+    MODAL_CLOSED: "modal:close",
 } as const;
 
-export const isFormChange = (event: string) => /^form:/.test(event);
+export const isFormChange = (event: string) => /^order:/.test(event);

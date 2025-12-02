@@ -7,14 +7,25 @@ export type TCardPreview = {
   description: string;
   inCart: boolean;
 };
+
+// Интерфейс действий, теперь корректно принимает ID
+interface ICardPreviewActions {
+  onBuy?: (id: string) => void;
+  onRemove?: (id: string) => void;
+}
+
 export class CardPreview extends Card<TCardPreview> {
   protected imageElement: HTMLImageElement;
   protected descriptionElement: HTMLElement;
   protected buttonElement: HTMLButtonElement;
+  
+  get id(): string {
+    return this.container.dataset.id || '';
+  }
 
   constructor(
     container: HTMLElement,
-    actions?: { onBuy?: () => void; onRemove?: () => void }
+    actions?: ICardPreviewActions
   ) {
     super(container);
     this.imageElement = ensureElement<HTMLImageElement>(
@@ -30,9 +41,14 @@ export class CardPreview extends Card<TCardPreview> {
       this.container
     );
 
+    // Теперь передаем id в колбэки, как того требует ICardPreviewActions
     this.buttonElement.addEventListener("click", () => {
-      if (this.buttonElement.dataset.action === "remove") actions?.onRemove?.();
-      else actions?.onBuy?.();
+      const id = this.id; 
+      if (this.buttonElement.dataset.action === "remove") {
+        actions?.onRemove?.(id); // Передаем ID
+      } else {
+        actions?.onBuy?.(id); // Передаем ID
+      }
     });
   }
 

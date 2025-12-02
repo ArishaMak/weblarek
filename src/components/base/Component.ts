@@ -1,30 +1,32 @@
-/**
- * Базовый компонент
- */
+// src/components/base/Component.ts
+
 export abstract class Component<T> {
-    protected constructor(protected readonly container: HTMLElement) {
+    protected readonly container: HTMLElement;
+
+    constructor(container: HTMLElement) {
+        this.container = container;
     }
 
-    // Инструментарий для работы с DOM в дочерних компонентах
+    // Метод для переключения состояния видимости
+    protected toggleClass(element: HTMLElement, className: string, force?: boolean) {
+        element.classList.toggle(className, force);
+    }
 
-    // Установить изображение с альтернативным текстом
+    // Метод для установки текстового содержимого
+    protected setText(element: HTMLElement, value: string | number | null): void {
+        element.textContent = String(value ?? '');
+    }
+
+    // Метод для установки изображения
     protected setImage(element: HTMLImageElement, src: string, alt?: string) {
-        if (element) {
-            element.src = src;
-            if (alt) {
-                element.alt = alt;
-            }
+        element.src = src;
+        if (alt) {
+            element.alt = alt;
         }
     }
 
-    // Вернуть корневой DOM-элемент
     render(data?: Partial<T>): HTMLElement {
         Object.assign(this as object, data ?? {});
-        return this.container;
-    }
-
-    // Фикс TS2445: Public getter для доступа к container извне (e.g., в main.ts gallery.element.innerHTML = ...)
-    get element(): HTMLElement {
         return this.container;
     }
 }

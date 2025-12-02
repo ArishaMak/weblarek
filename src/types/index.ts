@@ -1,4 +1,5 @@
-// Типы, связанные с базовым API
+// src/types/index.ts
+
 export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
 
 export interface IApi {
@@ -17,6 +18,14 @@ export interface IProduct {
     price: number | null;
 }
 
+// КРИТИЧЕСКИ ВАЖНО: Добавляем IOrderForm
+export interface IOrderForm {
+    payment: TPayment;
+    address: string;
+    email: string;
+    phone: string;
+}
+
 export interface IBuyer {
     payment: TPayment | null;
     email: string;
@@ -24,7 +33,7 @@ export interface IBuyer {
     address: string;
 }
 
-export interface IOrderPayload extends IBuyer {
+export interface IOrderPayload extends IOrderForm {
     items: string[]; // Массив ID товаров в корзине
     total: number;
 }

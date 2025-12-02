@@ -2,12 +2,12 @@
 
 // Алиасы для читаемости
 type EventName = string;
-type Subscriber<T = unknown> = (data: T) => void; // Фикс: Generic для типобезопасности (убран ...args: any[])
+type Subscriber<T = unknown> = (data: T) => void;
 
 export interface IEvents {
-    on<T = unknown>(eventName: EventName, callback: Subscriber<T>): void; // Фикс: Subscriber<T> вместо (data: T) => void (consistent)
+    on<T = unknown>(eventName: EventName, callback: Subscriber<T>): void;
     emit<T = unknown>(eventName: string, data?: T): void;
-    off(eventName: EventName, callback: Subscriber<unknown>): void; // Фикс: Subscriber<unknown> для off
+    off(eventName: EventName, callback: Subscriber<unknown>): void;
     offAll(): void;
     trigger<T extends object>(eventName: string, context?: Partial<T>): (event?: Partial<T>) => void;
     onAll(callback: (event: EmitterEvent) => void): void;
@@ -48,28 +48,25 @@ export class EventEmitter implements IEvents {
      * Генерация события
      */
     emit<T = unknown>(eventName: string, data?: T) {
-        const safeData = data ?? null; // Фикс: Всегда передаём data (null если undefined)
+        const safeData = data ?? null;
 
         try {
-            // 1. Точное совпадение
-            this._events.get(eventName)?.forEach(cb => cb(safeData as unknown)); // Фикс: as unknown для generic
+            this._events.get(eventName)?.forEach(cb => cb(safeData as unknown));
 
-            // 2. Wildcard для конкретного пространства имён (улучшено: поддержка multi-level, e.g., "user:profile:*" для "user:profile:updated")
             const parts = eventName.split(':');
             for (let i = 1; i <= parts.length; i++) {
                 const wildcard = parts.slice(0, i).join(':') + ':*';
-                this._events.get(wildcard)?.forEach(cb => cb(safeData as unknown)); // Фикс: multi-level wildcard
+                this._events.get(wildcard)?.forEach(cb => cb(safeData as unknown));
             }
 
-            // 3. Подписка на все события (*)
             this._events.get('*')?.forEach(cb => cb({ eventName, data: safeData } as unknown as Parameters<Subscriber>[0])); // Фикс: type-safe для object
         } catch (error) {
-            console.error(`Error emitting event ${eventName}:`, error); // Фикс: Error handling
+            console.error(`Error emitting event ${eventName}:`, error);
         }
     }
 
     onAll(callback: (event: EmitterEvent) => void) {
-        this.on('*', callback as Subscriber<unknown>); // Фикс: Cast с учётом object
+        this.on('*', callback as Subscriber<unknown>); 
     }
 
     /**
@@ -84,7 +81,7 @@ export class EventEmitter implements IEvents {
      */
     trigger<T extends object>(eventName: string, context?: Partial<T>): (event?: Partial<T>) => void {
         return (event?: Partial<T>) => {
-            const mergedData = { ...(context || {}), ...(event || {}) } as T; // Фикс: Explicit merge
+            const mergedData = { ...(context || {}), ...(event || {}) } as T;
             this.emit(eventName, mergedData);
         };
     }
