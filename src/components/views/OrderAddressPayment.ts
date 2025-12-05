@@ -1,80 +1,78 @@
-// src/components/views/OrderAddressPayment.ts
-
 import { Component } from "../base/Component";
 import type { IEvents } from "../base/Events";
-import { ensureElement } from "../../utils/utils";
-import { EVENTS } from "../base/eventNames"; 
 import type { TPayment } from "../../types";
 
 interface IOrderAddressPaymentView {
-  address: string;
-  payment: TPayment;
-  // Тип ошибок указывает, что поля могут отсутствовать или быть строкой
-  errors: Partial<Record<'payment' | 'address', string>>; 
-  valid: boolean;
+    address: string;
+    payment: TPayment;
+    errors: Partial<Record<'payment' | 'address', string>>;
+    valid: boolean;
 }
 
 export class OrderAddressPayment extends Component<IOrderAddressPaymentView> {
-  protected cardButton: HTMLButtonElement;
-  protected cashButton: HTMLButtonElement;
-  protected addressInput: HTMLInputElement;
-  protected nextButton: HTMLButtonElement;
-  protected paymentErrorElement: HTMLElement;
-  protected addressErrorElement: HTMLElement;
+    protected cardButton?: HTMLButtonElement;
+    protected cashButton?: HTMLButtonElement;
+    protected addressInput?: HTMLInputElement;
+    protected nextButton?: HTMLButtonElement;
+    protected paymentErrorElement?: HTMLElement;
+    protected addressErrorElement?: HTMLElement;
 
-  constructor(container: HTMLElement, protected events: IEvents) {
-    super(container);
-    
-    this.cardButton = ensureElement<HTMLButtonElement>('.button_card', container);
-    this.cashButton = ensureElement<HTMLButtonElement>('.button_cash', container);
-    this.addressInput = ensureElement<HTMLInputElement>('input[name="address"]', container);
-    this.nextButton = ensureElement<HTMLButtonElement>('.order__button', container);
-    
-    // Убедитесь, что эти элементы существуют в вашем HTML
-    this.paymentErrorElement = ensureElement<HTMLElement>('.form__errors_payment', container); 
-    this.addressErrorElement = ensureElement<HTMLElement>('.form__errors_address', container); 
-    
-    // --- Обработчики нажатия кнопок оплаты ---
-    this.cardButton.addEventListener('click', () => {
-      this.events.emit(EVENTS.ORDER_INPUT_CHANGE, { field: 'payment', value: 'card' });
-    });
-    this.cashButton.addEventListener('click', () => {
-      this.events.emit(EVENTS.ORDER_INPUT_CHANGE, { field: 'payment', value: 'cash' });
-    });
-    
-    // --- Обработчик ввода адреса ---
-    this.addressInput.addEventListener('input', (evt: Event) => {
-      const target = evt.target as HTMLInputElement;
-      this.events.emit(EVENTS.ORDER_INPUT_CHANGE, {
-        field: 'address',
-        value: target.value,
-      });
-    });
-    
-    this.nextButton.addEventListener('click', () => {
-      this.events.emit(EVENTS.ORDER_ADDRESS_PAYMENT_NEXT);
-    });
-  }
-  
-  // Установка значения поля адреса
-  set address(value: string) {
-    this.addressInput.value = value;
-  }
+    constructor(container: HTMLElement, protected events: IEvents) {
+        super(container);
 
-  // Переключение активной кнопки оплаты
-  set payment(value: TPayment) {
-    this.toggleClass(this.cardButton, 'button_alt-active', value === 'card');
-    this.toggleClass(this.cashButton, 'button_alt-active', value === 'cash');
-  }
+        this.cardButton = container.querySelector<HTMLButtonElement>('.button[name="card"]') || undefined;
+        this.cashButton = container.querySelector<HTMLButtonElement>('.button[name="cash"]') || undefined;
+        this.addressInput = container.querySelector<HTMLInputElement>('input[name="address"]') || undefined;
+        this.nextButton = container.querySelector<HTMLButtonElement>('.order__button') || undefined;
+        
+        // Селекторы ошибок
+        this.paymentErrorElement = container.querySelector<HTMLElement>('.form__errors') || undefined;
+        this.addressErrorElement = container.querySelector<HTMLElement>('.form__errors') || undefined;
 
-  // Активация/деактивация кнопки "Далее"
-  set valid(value: boolean) {
-    this.nextButton.disabled = !value;
-  }
-  
-  // Установка текста ошибок
-  set errors(value: Partial<Record<'payment' | 'address', string>>) {
-    this.setText(this.paymentErrorElement, value.payment ?? null);
-    this.setText(this.addressErrorElement, value.address ?? null);
-  }
+        if (this.cardButton) {
+            this.cardButton.addEventListener('click', () => {
+                this.events.emit('ORDER_INPUT_CHANGE', { field: 'payment', value: 'card' });
+            });
+        }
+        
+        if (this.cashButton) {
+            this.cashButton.addEventListener('click', () => {
+                this.events.emit('ORDER_INPUT_CHANGE', { field: 'payment', value: 'cash' });
+            });
+        }
+        
+        if (this.addressInput) {
+            this.addressInput.addEventListener('input', (evt: Event) => {
+                const target = evt.target as HTMLInputElement;
+                this.events.emit('ORDER_INPUT_CHANGE', {
+                    field: 'address',
+                    value: target.value,
+                });
+            });
+        }
+        
+        if (this.nextButton) {
+            this.nextButton.addEventListener('click', () => {
+                this.events.emit('ORDER_ADDRESS_PAYMENT_NEXT');
+            });
+        }
+    }
+
+    set address(value: string) {
+        if (this.addressInput) this.addressInput.value = value;
+    }
+
+    set payment(value: TPayment) {
+        if (this.cardButton) this.toggleClass(this.cardButton, 'button_alt-active', value === 'card');
+        if (this.cashButton) this.toggleClass(this.cashButton, 'button_alt-active', value === 'cash');
+    }
+
+    set valid(value: boolean) {
+        if (this.nextButton) this.nextButton.disabled = !value;
+    }
+
+    set errors(value: Partial<Record<'payment' | 'address', string>>) {
+        const errorText = value.payment || value.address || '';
+        if (this.paymentErrorElement) this.setText(this.paymentErrorElement, errorText);
+    }
 }

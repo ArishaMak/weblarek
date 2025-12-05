@@ -38,24 +38,6 @@ export class BuyerModel {
         this.phone = phone.trim();
         this.events.emit(EVENTS.BUYER_CHANGE);
     }
-    
-    // Вспомогательный метод для обновления любого поля
-    public setField(field: keyof Omit<IBuyer, 'total' | 'items'>, value: string | TPayment) {
-        switch (field) {
-            case 'payment':
-                this.setPayment(value as TPayment);
-                break;
-            case 'address':
-                this.setAddress(value as string);
-                break;
-            case 'email':
-                this.setEmail(value as string);
-                break;
-            case 'phone':
-                this.setPhone(value as string);
-                break;
-        }
-    }
 
     /**
      * Возвращает все данные покупателя

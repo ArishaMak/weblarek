@@ -21,18 +21,16 @@ import { OrderAddressPayment } from "./components/views/OrderAddressPayment";
 import { OrderEmailPhone } from "./components/views/OrderEmailPhone";
 import { OrderSuccess } from "./components/views/OrderSuccess";
 
-
 import type { IProduct, IOrderPayload, TPayment, IOrderForm } from "./types/index";
 
 const events: IEvents = new EventEmitter();
 const api = new WebLarekApi(API_URL);
 
 const products = new ProductsModel(events);
-const cart = new CartModel();
-const buyer = new BuyerModel(events);
 
-// Подписка на изменение корзины в CartModel
-cart.on(() => events.emit(EVENTS.CART_CHANGE)); 
+const cart = new CartModel(events);
+
+const buyer = new BuyerModel(events);
 
 const header = new Header(events, ensureElement<HTMLElement>(".header"));
 const gallery = new Gallery(ensureElement<HTMLElement>("main.gallery"));
@@ -51,35 +49,24 @@ const orderAddressPaymentView = new OrderAddressPayment(cloneTemplate(tplOrder),
 const orderEmailPhoneView = new OrderEmailPhone(cloneTemplate(tplContacts), events);
 
 const basketView = new BasketView(cloneTemplate(tplBasket), () =>
-    events.emit(EVENTS.ORDER_ADDRESS_PAYMENT) 
+    events.emit(EVENTS.ORDER_ADDRESS_PAYMENT)
 );
 
-const orderSuccess = new OrderSuccess(cloneTemplate(tplSuccess), () =>
-    modal.close()
-);
+const orderSuccess = new OrderSuccess(cloneTemplate(tplSuccess), () => modal.close());
 
 const cardPreviewView = new CardPreview(cloneTemplate(tplCardPreview), {
     onBuy: (id) => events.emit(EVENTS.CARD_BUY, { id }),
     onRemove: (id) => events.emit(EVENTS.CARD_REMOVE, { id, from: "preview" as const }),
 });
 
-// --- Функции Презентера ---
-
-function isAddressPaymentValid() {
-    return Object.keys(buyer.validateAddressPayment()).length === 0;
-}
-
-function isEmailPhoneValid() {
-    return Object.keys(buyer.validateEmailPhone()).length === 0;
-}
+// --- Presenter: функции ---
 
 function handlePay() {
-    if (!isEmailPhoneValid()) return;
+    if (Object.keys(buyer.validateEmailPhone()).length !== 0) return;
 
     const payload: IOrderPayload = {
         items: cart.getItems().map((i) => i.id),
-        // Здесь мы уверены, что payment не null, так как он валидируется выше
-        payment: buyer.getPayment() as TPayment, 
+        payment: buyer.getPayment() as TPayment,
         address: buyer.getAddress(),
         email: buyer.getEmail(),
         phone: buyer.getPhone(),
@@ -95,11 +82,8 @@ function handlePay() {
             const successElement = orderSuccess.render({ total: res.total });
             modal.open(successElement);
         })
-        .catch((e) => {
-            console.error("Ошибка оформления заказа:", e);
-        });
+        .catch((e) => console.error("Ошибка оформления заказа:", e));
 }
-
 
 function openPreview() {
     const item = products.getSelectedProduct();
@@ -136,34 +120,32 @@ function renderBasket() {
 }
 
 function openBasket() {
-    renderBasket();
-    // BasketView.render() может быть вызван без аргументов, чтобы просто вернуть контейнер.
-    // Если BasketView.ts требует аргумент, используйте render({})
-    modal.open(basketView.render()); 
+    modal.open(basketView.render());
 }
 
-
 function openOrderAddressPayment() {
+    const errors = buyer.validateAddressPayment();
     orderAddressPaymentView.render({
-        address: buyer.getAddress(), // Не null, т.к. инициализируется в модели
-        payment: buyer.getPayment() || 'card',
-        errors: buyer.validateAddressPayment(),
-        valid: isAddressPaymentValid()
+        address: buyer.getAddress(),
+        payment: buyer.getPayment() || "card",
+        errors,
+        valid: Object.keys(errors).length === 0,
     });
-    modal.open(orderAddressPaymentView.render()); 
+    modal.open(orderAddressPaymentView.render());
 }
 
 function openOrderEmailPhone() {
+    const errors = buyer.validateEmailPhone();
     orderEmailPhoneView.render({
-        email: buyer.getEmail(), // Не null, т.к. инициализируется в модели
+        email: buyer.getEmail(),
         phone: buyer.getPhone(),
-        errors: buyer.validateEmailPhone(),
-        valid: isEmailPhoneValid()
+        errors,
+        valid: Object.keys(errors).length === 0,
     });
     modal.open(orderEmailPhoneView.render());
 }
 
-// --- Подписки на События ---
+// --- Event listeners ---
 
 events.on(EVENTS.PRODUCTS_CHANGE_ITEMS, () => {
     const cardElements = products.getItems().map((item: IProduct) => {
@@ -177,73 +159,63 @@ events.on(EVENTS.PRODUCTS_CHANGE_ITEMS, () => {
             category: item.category,
         });
     });
-    gallery.catalog = cardElements; 
+    gallery.catalog = cardElements;
 });
 
 events.on(EVENTS.PRODUCTS_CHANGE_SELECTED_ID, openPreview);
 
 events.on(EVENTS.CART_CHANGE, () => {
     header.counter = cart.getCount();
-    renderBasket(); 
+    renderBasket();
 });
 
 events.on(EVENTS.BUYER_CHANGE, () => {
-    // Обновление состояния View адреса/оплаты
-    const addressPaymentErrors = buyer.validateAddressPayment();
+    const addrErr = buyer.validateAddressPayment();
     orderAddressPaymentView.render({
-        errors: addressPaymentErrors,
-        valid: Object.keys(addressPaymentErrors).length === 0,
+        errors: addrErr,
+        valid: Object.keys(addrErr).length === 0,
         address: buyer.getAddress(),
-        payment: buyer.getPayment()
+        payment: buyer.getPayment() ?? undefined,
     });
-    
-    // Обновление состояния View контактов
-    const emailPhoneErrors = buyer.validateEmailPhone();
+
+    const contactErr = buyer.validateEmailPhone();
     orderEmailPhoneView.render({
-        errors: emailPhoneErrors,
-        valid: Object.keys(emailPhoneErrors).length === 0,
+        errors: contactErr,
+        valid: Object.keys(contactErr).length === 0,
         email: buyer.getEmail(),
-        phone: buyer.getPhone()
+        phone: buyer.getPhone(),
     });
 });
 
-events.on<{ field: keyof IOrderForm, value: string }>(EVENTS.ORDER_INPUT_CHANGE, ({ field, value }) => {
-    // Безопасное обновление данных в модели BuyerModel
+events.on<{ field: keyof IOrderForm; value: string }>(EVENTS.ORDER_INPUT_CHANGE, ({ field, value }) => {
     switch (field) {
-        case 'address':
+        case "address":
             buyer.setAddress(value);
             break;
-        case 'email':
+        case "email":
             buyer.setEmail(value);
             break;
-        case 'phone':
+        case "phone":
             buyer.setPhone(value);
             break;
-        case 'payment':
-            // Типизация value как TPayment необходима, так как value приходит как string
+        case "payment":
             buyer.setPayment(value as TPayment);
             break;
-        default:
-            console.error(`Unknown field: ${field}`);
     }
 });
-
 
 events.on(EVENTS.BASKET_OPEN, openBasket);
 events.on(EVENTS.ORDER_ADDRESS_PAYMENT, openOrderAddressPayment);
 
 events.on(EVENTS.ORDER_ADDRESS_PAYMENT_NEXT, () => {
-    if (isAddressPaymentValid()) {
+    if (Object.keys(buyer.validateAddressPayment()).length === 0) {
         openOrderEmailPhone();
     }
 });
 
 events.on(EVENTS.ORDER_EMAIL_PHONE_PAY, handlePay);
 
-// --- ИСПРАВЛЕНИЯ СИГНАТУР СОБЫТИЙ ---
-// Добавлены явные типы для аргументов, чтобы устранить ошибки "Target signature provides too few arguments" 
-// и "Parameter 'id' implicitly has an 'any' type".
-
+// Фикс типизации событий
 events.on<{ id: string }>(EVENTS.CARD_SELECT, ({ id }) => {
     products.setSelectedProduct(id);
 });
@@ -256,28 +228,21 @@ events.on<{ id: string }>(EVENTS.CARD_BUY, ({ id }) => {
     }
 });
 
-events.on<{ id: string; from?: "preview" | "basket" }>(
-    EVENTS.CARD_REMOVE,
-    ({ id, from }) => {
-        cart.remove(id);
-        if (from === "preview") {
-            modal.close();
-        }
-    }
-);
-// --- КОНЕЦ ИСПРАВЛЕНИЙ СИГНАТУР ---
+events.on<{ id: string; from?: "preview" | "basket" }>(EVENTS.CARD_REMOVE, ({ id, from }) => {
+    cart.remove(id);
+    if (from === "preview") modal.close();
+});
 
-
-// --- Инициализация ---
+// Init
 
 header.render({ counter: 0 });
 
 (async () => {
     try {
-        const items = await api.getProducts(); 
+        const items = await api.getProducts();
         products.setItems(items);
     } catch (e) {
-        console.error("Не удалось загрузить каталог с сервера:", e);
+        console.error("Не удалось загрузить каталог:", e);
         products.setItems([]);
     }
 })();
