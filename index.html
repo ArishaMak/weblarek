@@ -91,45 +91,47 @@
     </template>
 
     <template id="order">
-      <form class="form" name="order">
+    <form class="form" name="order">
         <div class="order">
-          <div class="order__field">
-            <h2 class="modal__title">Способ оплаты</h2>
-            <div class="order__buttons">
-              <button name="card" type="button" class="button button_alt">Онлайн</button>
-              <button name="cash" type="button" class="button button_alt">При получении</button>
+            <div class="order__field">
+                <h2 class="modal__title">Способ оплаты</h2>
+                <div class="order__buttons">
+                    <button name="card" type="button" class="button button_alt">Онлайн</button>
+                    <button name="cash" type="button" class="button button_alt">При получении</button>
+                </div>
+                <span class="form__errors form__errors_payment"></span> 
             </div>
-          </div>
-          <label class="order__field">
-            <span class="form__label modal__title">Адрес доставки</span>
-            <input name="address" class="form__input" type="text" placeholder="Введите адрес" />
-          </label>
+            <label class="order__field">
+                <span class="form__label modal__title">Адрес доставки</span>
+                <input name="address" class="form__input" type="text" placeholder="Введите адрес" />
+                <span class="form__errors form__errors_address"></span>
+            </label>
         </div>
         <div class="modal__actions">
-          <button type="submit" disabled class="button order__button">Далее</button>
-          <span class="form__errors"></span>
-        </div>
-      </form>
-    </template>
+            <button type="submit" disabled class="button order__button">Далее</button>
+            </div>
+    </form>
+</template>
 
     <template id="contacts">
-      <form class="form" name="contacts">
-        <div class="order">
-          <label class="order__field">
-            <span class="form__label modal__title">Email</span>
-            <input name="email" class="form__input" type="text" placeholder="Введите Email" />
-          </label>
-          <label class="order__field">
-            <span class="form__label modal__title">Телефон</span>
-            <input name="phone" class="form__input" type="text" placeholder="+7 (" />
-          </label>
-        </div>
-        <div class="modal__actions">
-          <button type="submit" disabled class="button">Оплатить</button>
-          <span class="form__errors"></span>
-        </div>
-      </form>
-    </template>
+  <form class="form" name="contacts">
+    <div class="order">
+      <label class="order__field">
+        <span class="form__label modal__title">Email</span>
+        <input name="email" class="form__input" type="text" placeholder="Введите Email" />
+        <span class="form__errors form__errors_email"></span> 
+      </label>
+      <label class="order__field">
+        <span class="form__label modal__title">Телефон</span>
+        <input name="phone" class="form__input" type="text" placeholder="+7 (" />
+        <span class="form__errors form__errors_phone"></span> 
+      </label>
+    </div>
+    <div class="modal__actions">
+      <button type="submit" disabled class="button">Оплатить</button>
+    </div>
+  </form>
+</template>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

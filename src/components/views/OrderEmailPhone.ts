@@ -1,7 +1,6 @@
 import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
-// ИСПРАВЛЕНИЕ TS6133: Удален неиспользуемый импорт IOrderForm
-// import { IOrderForm } from "../../types"; 
+import { EVENTS } from "../base/eventNames";
 
 interface IOrderEmailPhoneView {
     email: string;
@@ -20,33 +19,36 @@ export class OrderEmailPhone extends Component<IOrderEmailPhoneView> {
     constructor(container: HTMLElement, protected events: IEvents) {
         super(container);
 
-        // Используем безопасный поиск
         this.emailInput = container.querySelector<HTMLInputElement>('input[name="email"]') || undefined;
         this.phoneInput = container.querySelector<HTMLInputElement>('input[name="phone"]') || undefined;
         this.nextButton = container.querySelector<HTMLButtonElement>('.button') || undefined;
         
-        // Предполагаем, что ошибки находятся в .form__errors или используем более конкретный селектор
-        this.emailErrorElement = container.querySelector<HTMLElement>('.form__errors_email') || undefined;
-        this.phoneErrorElement = container.querySelector<HTMLElement>('.form__errors_phone') || undefined;
-
+        // Отключаем кнопку по умолчанию
+        if (this.nextButton) this.nextButton.disabled = true;
+        
+        // Конкретные селекторы ошибок + fallback
+        this.emailErrorElement = container.querySelector<HTMLElement>('.form__errors_email')
+            || container.querySelector<HTMLElement>('.form__errors') || undefined;
+        this.phoneErrorElement = container.querySelector<HTMLElement>('.form__errors_phone')
+            || container.querySelector<HTMLElement>('.form__errors') || undefined;
 
         if (this.emailInput) {
             this.emailInput.addEventListener('input', (evt: Event) => {
                 const target = evt.target as HTMLInputElement;
-                this.events.emit('ORDER_INPUT_CHANGE', { field: 'email', value: target.value });
+                this.events.emit(EVENTS.ORDER_INPUT_CHANGE, { field: 'email', value: target.value });  // ← ИСПРАВЛЕНО
             });
         }
         
         if (this.phoneInput) {
             this.phoneInput.addEventListener('input', (evt: Event) => {
                 const target = evt.target as HTMLInputElement;
-                this.events.emit('ORDER_INPUT_CHANGE', { field: 'phone', value: target.value });
+                this.events.emit(EVENTS.ORDER_INPUT_CHANGE, { field: 'phone', value: target.value });  // ← ИСПРАВЛЕНО
             });
         }
         
         if (this.nextButton) {
             this.nextButton.addEventListener('click', () => {
-                this.events.emit('ORDER_EMAIL_PHONE_PAY');
+                this.events.emit(EVENTS.ORDER_EMAIL_PHONE_PAY);  // ← ИСПРАВЛЕНО
             });
         }
     }

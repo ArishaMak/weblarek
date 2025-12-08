@@ -12,7 +12,7 @@ import { BuyerModel } from "./components/models/BuyerModel";
 
 import { Header } from "./components/views/Header";
 import { Gallery } from "./components/views/Gallery";
-import { CardGallery } from "./components/views/CardGallery";
+import { CardCatalog } from "./components/views/Catalog";
 import { CardPreview } from "./components/views/CardPreview";
 import { CardInCart } from "./components/views/CardInCart";
 import { BasketView } from "./components/views/BasketView";
@@ -73,16 +73,20 @@ function handlePay() {
         total: cart.getTotal(),
     };
 
-    api
-        .postOrder(payload)
+    api.postOrder(payload)
         .then((res) => {
             cart.clear();
             buyer.reset();
 
+            // Сохраняем элемент, чтобы не делать двойной render
             const successElement = orderSuccess.render({ total: res.total });
             modal.open(successElement);
         })
-        .catch((e) => console.error("Ошибка оформления заказа:", e));
+        .catch((e) => {
+            console.error("Ошибка оформления заказа:", e);
+            // Добавляем уведомление пользователю
+            alert("Не удалось оформить заказ. Попробуйте позже.");
+        });
 }
 
 function openPreview() {
@@ -96,8 +100,24 @@ function openPreview() {
         description: item.description,
         inCart: cart.has(item.id),
     });
-
+    previewElement.dataset.id = item.id;
     modal.open(previewElement);
+}
+
+function renderGallery() {
+    const cardElements = products.getItems().map((item: IProduct) => {
+        const card = new CardCatalog(cloneTemplate(tplCardGallery), {  
+            onClick: () => events.emit(EVENTS.CARD_SELECT, { id: item.id }),
+        });
+        return card.render({
+            title: item.title,
+            price: item.price,
+            image: item.image,
+            category: item.category,
+            inCart: cart.has(item.id),
+        });
+    });
+    gallery.catalog = cardElements;
 }
 
 function renderBasket() {
@@ -120,18 +140,23 @@ function renderBasket() {
 }
 
 function openBasket() {
-    modal.open(basketView.render());
+    const element = basketView.render(); // сохраняем результат render
+    modal.open(element);
 }
 
 function openOrderAddressPayment() {
+    if (!buyer.getPayment()) {
+        buyer.setPayment('card' as TPayment);
+    }
+
     const errors = buyer.validateAddressPayment();
-    orderAddressPaymentView.render({
+    const renderedElement = orderAddressPaymentView.render({ 
         address: buyer.getAddress(),
-        payment: buyer.getPayment() || "card",
+        payment: buyer.getPayment()!,
         errors,
         valid: Object.keys(errors).length === 0,
     });
-    modal.open(orderAddressPaymentView.render());
+    modal.open(renderedElement);
 }
 
 function openOrderEmailPhone() {
@@ -147,26 +172,14 @@ function openOrderEmailPhone() {
 
 // --- Event listeners ---
 
-events.on(EVENTS.PRODUCTS_CHANGE_ITEMS, () => {
-    const cardElements = products.getItems().map((item: IProduct) => {
-        const card = new CardGallery(cloneTemplate(tplCardGallery), {
-            onClick: () => events.emit(EVENTS.CARD_SELECT, { id: item.id }),
-        });
-        return card.render({
-            title: item.title,
-            price: item.price,
-            image: item.image,
-            category: item.category,
-        });
-    });
-    gallery.catalog = cardElements;
-});
+events.on(EVENTS.PRODUCTS_CHANGE_ITEMS, renderGallery);
 
 events.on(EVENTS.PRODUCTS_CHANGE_SELECTED_ID, openPreview);
 
 events.on(EVENTS.CART_CHANGE, () => {
     header.counter = cart.getCount();
     renderBasket();
+    renderGallery(); 
 });
 
 events.on(EVENTS.BUYER_CHANGE, () => {
@@ -188,6 +201,7 @@ events.on(EVENTS.BUYER_CHANGE, () => {
 });
 
 events.on<{ field: keyof IOrderForm; value: string }>(EVENTS.ORDER_INPUT_CHANGE, ({ field, value }) => {
+    console.log('main.ts: ORDER_INPUT_CHANGE received', { field, value });  // ЛОГ: событие дошло?
     switch (field) {
         case "address":
             buyer.setAddress(value);

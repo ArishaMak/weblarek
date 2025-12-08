@@ -20,12 +20,15 @@ export class BuyerModel {
 
     // Сеттеры
     public setPayment(payment: TPayment) {
+        console.log('BuyerModel: setPayment called with', payment);  // ЛОГ для оплаты
         this.payment = payment;
         this.events.emit(EVENTS.BUYER_CHANGE);
     }
 
     public setAddress(address: string) {
+        console.log('BuyerModel: setAddress called with', address, '(trimmed:', address.trim(), ')');  // ЛОГ: что приходит
         this.address = address.trim();
+        console.log('BuyerModel: address now', this.address);  // ЛОГ: что сохранено
         this.events.emit(EVENTS.BUYER_CHANGE);
     }
 
@@ -80,11 +83,15 @@ export class BuyerModel {
 
         if (!this.payment) {
             errors.payment = "Выберите способ оплаты";
+            console.log('BuyerModel: payment error - null');  // ЛОГ: если payment null
         }
-        if (!this.address) {
+        console.log('BuyerModel: validating address', this.address, '(length:', this.address.length, ')');  // ЛОГ: что валидируется
+        if (!this.address.trim()) {  // Или просто if (!this.address), т.к. уже trim в set
             errors.address = "Необходимо указать адрес";
+            console.log('BuyerModel: address error triggered');  // ЛОГ: почему ошибка
         }
 
+        console.log('BuyerModel: final errors', errors);  // ЛОГ: итоговые ошибки
         return errors;
     }
 

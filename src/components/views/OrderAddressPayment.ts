@@ -1,5 +1,6 @@
 import { Component } from "../base/Component";
 import type { IEvents } from "../base/Events";
+import { EVENTS } from "../base/eventNames";
 import type { TPayment } from "../../types";
 
 interface IOrderAddressPaymentView {
@@ -25,26 +26,30 @@ export class OrderAddressPayment extends Component<IOrderAddressPaymentView> {
         this.addressInput = container.querySelector<HTMLInputElement>('input[name="address"]') || undefined;
         this.nextButton = container.querySelector<HTMLButtonElement>('.order__button') || undefined;
         
-        // Селекторы ошибок
-        this.paymentErrorElement = container.querySelector<HTMLElement>('.form__errors') || undefined;
-        this.addressErrorElement = container.querySelector<HTMLElement>('.form__errors') || undefined;
+        // Первоначально кнопка "Далее" должна быть отключена
+        if (this.nextButton) this.nextButton.disabled = true;
 
+        this.paymentErrorElement = container.querySelector<HTMLElement>('.form__errors_payment') || undefined;
+        this.addressErrorElement = container.querySelector<HTMLElement>('.form__errors_address') || undefined;
+
+        // Обработчики (ИСПРАВЛЕНЫ: используем EVENTS)
+        
         if (this.cardButton) {
             this.cardButton.addEventListener('click', () => {
-                this.events.emit('ORDER_INPUT_CHANGE', { field: 'payment', value: 'card' });
+                this.events.emit(EVENTS.ORDER_INPUT_CHANGE, { field: 'payment', value: 'card' });
             });
         }
         
         if (this.cashButton) {
             this.cashButton.addEventListener('click', () => {
-                this.events.emit('ORDER_INPUT_CHANGE', { field: 'payment', value: 'cash' });
+                this.events.emit(EVENTS.ORDER_INPUT_CHANGE, { field: 'payment', value: 'cash' });
             });
         }
         
         if (this.addressInput) {
             this.addressInput.addEventListener('input', (evt: Event) => {
                 const target = evt.target as HTMLInputElement;
-                this.events.emit('ORDER_INPUT_CHANGE', {
+                this.events.emit(EVENTS.ORDER_INPUT_CHANGE, {
                     field: 'address',
                     value: target.value,
                 });
@@ -53,7 +58,7 @@ export class OrderAddressPayment extends Component<IOrderAddressPaymentView> {
         
         if (this.nextButton) {
             this.nextButton.addEventListener('click', () => {
-                this.events.emit('ORDER_ADDRESS_PAYMENT_NEXT');
+                this.events.emit(EVENTS.ORDER_ADDRESS_PAYMENT_NEXT);
             });
         }
     }
@@ -62,9 +67,12 @@ export class OrderAddressPayment extends Component<IOrderAddressPaymentView> {
         if (this.addressInput) this.addressInput.value = value;
     }
 
-    set payment(value: TPayment) {
-        if (this.cardButton) this.toggleClass(this.cardButton, 'button_alt-active', value === 'card');
-        if (this.cashButton) this.toggleClass(this.cashButton, 'button_alt-active', value === 'cash');
+    set payment(value: TPayment | null) {
+        if (this.cardButton)
+            this.toggleClass(this.cardButton, 'button_alt-active', value === 'card');
+
+        if (this.cashButton)
+            this.toggleClass(this.cashButton, 'button_alt-active', value === 'cash');
     }
 
     set valid(value: boolean) {
@@ -72,7 +80,11 @@ export class OrderAddressPayment extends Component<IOrderAddressPaymentView> {
     }
 
     set errors(value: Partial<Record<'payment' | 'address', string>>) {
-        const errorText = value.payment || value.address || '';
-        if (this.paymentErrorElement) this.setText(this.paymentErrorElement, errorText);
+        // Показываем отдельно ошибки для payment и address (если элементы есть)
+        const paymentError = value.payment ?? '';
+        const addressError = value.address ?? '';
+
+        if (this.paymentErrorElement) this.setText(this.paymentErrorElement, paymentError);
+        if (this.addressErrorElement) this.setText(this.addressErrorElement, addressError);
     }
 }

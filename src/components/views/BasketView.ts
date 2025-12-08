@@ -18,18 +18,22 @@ export class BasketView extends Component<IBasket> {
   protected actionsElement: HTMLElement; 
 
   constructor(container: HTMLElement, onCheckout: () => void) {
-  super(container); 
-  this.listElement = ensureElement(".basket__list", this.container); 
-  this.totalElement = ensureElement(".basket__price", this.container); 
-  this.buttonElement = ensureElement<HTMLButtonElement>( 
-    ".basket__button", 
-    this.container 
-  ); 
-  this.actionsElement = ensureElement(".modal__actions", this.container); 
+  super(container);
 
-  // Добавляем слушатель для кнопки оформления заказа
-  this.buttonElement.addEventListener("click", onCheckout); 
-  } 
+  this.listElement = ensureElement(".basket__list", this.container);
+  this.totalElement = ensureElement(".basket__price", this.container);
+  this.buttonElement = ensureElement<HTMLButtonElement>(
+    ".basket__button",
+    this.container
+  );
+  this.actionsElement = ensureElement(".modal__actions", this.container);
+
+  // Кнопка оформления заказа должна быть выключена по умолчанию
+  this.buttonElement.disabled = true;   // ← ВАЖНО! Вот это и исправляет баг
+
+  // Добавляем слушатель для кнопки оформления
+  this.buttonElement.addEventListener("click", onCheckout);
+  }
 
   set items(value: HTMLElement[]) { 
   this.listElement.replaceChildren(...value);
