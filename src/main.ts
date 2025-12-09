@@ -179,7 +179,6 @@ events.on(EVENTS.PRODUCTS_CHANGE_SELECTED_ID, openPreview);
 events.on(EVENTS.CART_CHANGE, () => {
     header.counter = cart.getCount();
     renderBasket();
-    renderGallery(); 
 });
 
 events.on(EVENTS.BUYER_CHANGE, () => {
