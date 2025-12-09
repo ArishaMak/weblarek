@@ -57,10 +57,12 @@ export class OrderAddressPayment extends Component<IOrderAddressPaymentView> {
         }
         
         if (this.nextButton) {
-            this.nextButton.addEventListener('click', () => {
+            this.nextButton.addEventListener('click', (e) => {
+                e.preventDefault();
                 this.events.emit(EVENTS.ORDER_ADDRESS_PAYMENT_NEXT);
-            });
+        });
         }
+
     }
 
     set address(value: string) {

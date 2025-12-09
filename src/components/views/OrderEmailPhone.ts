@@ -47,10 +47,12 @@ export class OrderEmailPhone extends Component<IOrderEmailPhoneView> {
         }
         
         if (this.nextButton) {
-            this.nextButton.addEventListener('click', () => {
-                this.events.emit(EVENTS.ORDER_EMAIL_PHONE_PAY);  // ← ИСПРАВЛЕНО
-            });
-        }
+            this.nextButton.addEventListener('click', (e) => {
+            e.preventDefault();         
+            this.events.emit(EVENTS.ORDER_EMAIL_PHONE_PAY);
+        });
+}
+
     }
 
     set email(value: string) {
