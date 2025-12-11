@@ -9,9 +9,9 @@ export type TCardPreview = {
   price: number | null;
 };
 
+// ФИКС: Расширяем интерфейс — добавляем onToggle (убираем onBuy/onRemove, т.к. toggle заменяет их)
 interface ICardPreviewActions {
-  onBuy?: (id: string) => void;
-  onRemove?: (id: string) => void;
+  onToggle?: (id: string) => void;  // Единственный callback: модель решит add/remove
 }
 
 export class CardPreview extends Card<TCardPreview> {
@@ -20,27 +20,22 @@ export class CardPreview extends Card<TCardPreview> {
   protected buttonElement: HTMLButtonElement;
   protected titleElement: HTMLElement;
   protected priceElement: HTMLElement;
-  constructor(
-  container: HTMLElement,
-  actions?: ICardPreviewActions
-) {
-  super(container);
 
-  this.titleElement = ensureElement<HTMLElement>(".card__title", container);
-  this.imageElement = ensureElement<HTMLImageElement>(".card__image", container);
-  this.descriptionElement = ensureElement<HTMLElement>(".card__text", container);
-  this.buttonElement = ensureElement<HTMLButtonElement>(".card__button", container);
-  this.priceElement = ensureElement<HTMLElement>(".card__price", container);
+  constructor(container: HTMLElement, actions?: ICardPreviewActions) {
+    super(container);
 
-  this.buttonElement.addEventListener("click", () => {
-    const id = this.id;
-    if (this.buttonElement.dataset.action === "remove") {
-      actions?.onRemove?.(id);
-    } else {
-      actions?.onBuy?.(id);
-    }
-  });
-}
+    this.titleElement = ensureElement<HTMLElement>(".card__title", container);
+    this.imageElement = ensureElement<HTMLImageElement>(".card__image", container);
+    this.descriptionElement = ensureElement<HTMLElement>(".card__text", container);
+    this.buttonElement = ensureElement<HTMLButtonElement>(".card__button", container);
+    this.priceElement = ensureElement<HTMLElement>(".card__price", container);
+
+    // ФИКС: Упрощаем клик — всегда toggle (без проверки dataset)
+    this.buttonElement.addEventListener("click", () => {
+      const id = this.id;
+      actions?.onToggle?.(id);  // Модель (cart) решит: add или remove
+    });
+  }
 
   get id(): string {
     return this.container.dataset.id || "";
@@ -58,13 +53,11 @@ export class CardPreview extends Card<TCardPreview> {
     this.descriptionElement.textContent = value;
   }
 
+  // ФИКС: Убираем dataset.action — не нужно для toggle
   set inCart(value: boolean) {
-    // Добавляем/убираем класс вместо dataset
     this.buttonElement.classList.toggle("in-cart", value);
-
-    this.buttonElement.textContent = value
-      ? "Удалить из корзины"
-      : "Купить";
+    this.buttonElement.textContent = value ? "Удалить из корзины" : "Купить";
+    // Если нужно, можно добавить aria-label или title для доступности, но dataset не требуется
   }
 
   set price(value: number | null) {

@@ -55,8 +55,7 @@ const basketView = new BasketView(cloneTemplate(tplBasket), () =>
 const orderSuccess = new OrderSuccess(cloneTemplate(tplSuccess), () => modal.close());
 
 const cardPreviewView = new CardPreview(cloneTemplate(tplCardPreview), {
-    onBuy: (id) => events.emit(EVENTS.CARD_BUY, { id }),
-    onRemove: (id) => events.emit(EVENTS.CARD_REMOVE, { id, from: "preview" as const }),
+  onToggle: (id: string) => events.emit(EVENTS.PRODUCT_TOGGLE, { id }),
 });
 
 // --- Presenter: функции ---
@@ -233,17 +232,21 @@ events.on<{ id: string }>(EVENTS.CARD_SELECT, ({ id }) => {
     products.setSelectedProduct(id);
 });
 
-events.on<{ id: string }>(EVENTS.CARD_BUY, ({ id }) => {
-    const item = products.getItemById(id);
-    if (item) {
-        cart.add(item);
-        modal.close();
-    }
+events.on<{ id: string }>(EVENTS.PRODUCT_TOGGLE, ({ id }) => {
+  const item = products.getItemById(id);
+  if (!item) return;
+
+  if (cart.has(id)) {
+    cart.remove(id);
+  } else {
+    cart.add(item);
+  }
+  modal.close();  // Всегда закрываем после toggle
 });
 
 events.on<{ id: string; from?: "preview" | "basket" }>(EVENTS.CARD_REMOVE, ({ id, from }) => {
     cart.remove(id);
-    if (from === "preview") modal.close();
+    if (from === "preview") modal.close();  // Но теперь preview использует toggle, так что from="preview" не сработает — ок
 });
 
 // Init

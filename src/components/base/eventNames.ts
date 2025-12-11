@@ -23,6 +23,7 @@ export const EVENTS = {
     
     MODAL_OPENED: "modal:open",
     MODAL_CLOSED: "modal:close",
+    PRODUCT_TOGGLE: "product:toggle",
 } as const;
 
 export const isFormChange = (event: string) => /^order:/.test(event);

@@ -18,6 +18,7 @@ export interface IProduct {
     price: number | null;
 }
 
+// КРИТИЧЕСКИ ВАЖНО: Добавляем IOrderForm
 export interface IOrderForm {
     payment: TPayment;
     address: string;
